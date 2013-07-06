@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\FreeImage\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib"
+				AdditionalDependencies="..\FreeImage\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib imm32.lib"
 				LinkIncremental="2"
 				DelayLoadDLLs="uxtheme.dll"
 				GenerateDebugInformation="true"
@@ -171,7 +171,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\FreeImage\x64\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib"
+				AdditionalDependencies="..\FreeImage\x64\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib imm32.lib"
 				LinkIncremental="2"
 				DelayLoadDLLs="uxtheme.dll"
 				GenerateDebugInformation="true"
@@ -261,7 +261,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\FreeImage\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib"
+				AdditionalDependencies="..\FreeImage\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib imm32.lib"
 				LinkIncremental="1"
 				DelayLoadDLLs="uxtheme.dll"
 				SubSystem="2"
@@ -350,7 +350,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\FreeImage\x64\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib"
+				AdditionalDependencies="..\FreeImage\x64\FreeImagePlus.lib delayimp.lib htmlhelp.lib userenv.lib imm32.lib"
 				LinkIncremental="1"
 				DelayLoadDLLs="uxtheme.dll"
 				SubSystem="2"

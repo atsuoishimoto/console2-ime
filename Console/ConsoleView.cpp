@@ -64,6 +64,7 @@ ConsoleView::ConsoleView(MainFrame& mainFrame, DWORD dwTabIndex, const wstring& 
 , m_bufferMutex(NULL, FALSE, NULL)
 , m_bFlashTimerRunning(false)
 , m_dwFlashes(0)
+, m_imeComposition(false)
 {
 }
 
@@ -95,6 +96,33 @@ BOOL ConsoleView::PreTranslateMessage(MSG* pMsg)
 		// This prevents WM_CHAR and WM_SYSCHAR messages, enabling stuff like
 		// handling 'dead' characters input and passing all keys to console.
 		if (pMsg->wParam == VK_PACKET) return FALSE;
+
+		if (pMsg->wParam == VK_PROCESSKEY) return FALSE;
+
+		// We need WM_CHAR to open IME composition window for characters.
+		HIMC hImc = ImmGetContext(pMsg->hwnd);
+		BOOL isOpen = ImmGetOpenStatus(hImc);
+		if (isOpen) {
+			if (!m_imeComposition) {
+				// following keys are passed to console if composition is not started.
+				if ((GetKeyState(VK_MENU) >= 0) &&
+					(GetKeyState(VK_CONTROL) >= 0))
+				{
+					if ((pMsg->wParam != VK_RETURN) && 
+						(pMsg->wParam != VK_SPACE) &&
+						(pMsg->wParam != VK_TAB) &&
+						(pMsg->wParam != VK_BACK)) 
+					{
+						return FALSE;
+					}
+				}
+			}
+			else 
+			{
+				return FALSE;
+			}
+		}
+
 		::DispatchMessage(pMsg);
 		return TRUE;
 	}
@@ -343,6 +371,9 @@ LRESULT ConsoleView::OnSysKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
 
 LRESULT ConsoleView::OnConsoleFwdMsg(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
 {
+	if ((wParam == VK_KANJI) || (wParam == VK_PROCESSKEY)) {
+		return DefWindowProc(uMsg, wParam, lParam);
+	}
 	if (((uMsg == WM_KEYDOWN) || (uMsg == WM_KEYUP)) && (wParam == VK_PACKET)) return 0;
 
 	if (!TranslateKeyDown(uMsg, wParam, lParam))
@@ -749,6 +780,71 @@ LRESULT ConsoleView::OnInputLangChangeRequest(UINT uMsg, WPARAM wParam, LPARAM l
 	::PostMessage(m_consoleHandler.GetConsoleParams()->hwndConsoleWindow, uMsg, wParam, lParam);
 	bHandled = FALSE;
 	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+void ConsoleView::updateCompositWindow() {
+
+	StylesSettings& stylesSettings = g_settingsHandler->GetAppearanceSettings().stylesSettings;
+	SharedMemory<ConsoleInfo>& consoleInfo = m_consoleHandler.GetConsoleInfo();
+
+	TEXTMETRIC	textMetric;
+
+	m_dcText.SelectFont(m_fontText);
+	m_dcText.GetTextMetrics(&textMetric);
+
+	CRect rc		= m_cursor->GetCursorRect();
+	rc.left	+= (consoleInfo->csbi.dwCursorPosition.X - consoleInfo->csbi.srWindow.Left) * m_nCharWidth + stylesSettings.dwInsideBorder;
+	rc.top	+= (consoleInfo->csbi.dwCursorPosition.Y - consoleInfo->csbi.srWindow.Top) * m_nCharHeight + stylesSettings.dwInsideBorder
+				+ textMetric.tmExternalLeading;
+
+	COMPOSITIONFORM cf;
+	cf.dwStyle = CFS_POINT;
+	cf.ptCurrentPos.x = rc.left;
+	cf.ptCurrentPos.y = rc.top;
+
+	HIMC hImc = ImmGetContext(m_hWnd);
+	ImmSetCompositionWindow(hImc, &cf);
+
+	LOGFONT lf;
+	m_fontText.GetLogFont(lf);
+	ImmSetCompositionFont(hImc, &lf);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+LRESULT ConsoleView::OnIMEComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	updateCompositWindow();
+	return DefWindowProc(uMsg, wParam, lParam);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+LRESULT ConsoleView::OnIMEStartComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	updateCompositWindow();
+	m_imeComposition = true;
+
+	return DefWindowProc(uMsg, wParam, lParam);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+LRESULT ConsoleView::OnIMEEndComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/) {
+	m_imeComposition = false;
+	return DefWindowProc(uMsg, wParam, lParam);
 }
 
 //////////////////////////////////////////////////////////////////////////////

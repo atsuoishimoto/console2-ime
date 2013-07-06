@@ -65,6 +65,9 @@ class ConsoleView
 			MESSAGE_HANDLER(WM_TIMER, OnTimer)
 			MESSAGE_HANDLER(WM_INPUTLANGCHANGEREQUEST, OnInputLangChangeRequest)
 			MESSAGE_HANDLER(WM_INPUTLANGCHANGE, OnInputLangChange)
+			MESSAGE_HANDLER(WM_IME_COMPOSITION, OnIMEComposition)
+			MESSAGE_HANDLER(WM_IME_STARTCOMPOSITION, OnIMEStartComposition)
+			MESSAGE_HANDLER(WM_IME_ENDCOMPOSITION, OnIMEEndComposition)
 			MESSAGE_HANDLER(WM_DROPFILES, OnDropFiles)
 			MESSAGE_HANDLER(UM_UPDATE_CONSOLE_VIEW, OnUpdateConsoleView)
 			COMMAND_RANGE_HANDLER(ID_SCROLL_UP, ID_SCROLL_ALL_RIGHT, OnScrollCommand)
@@ -91,6 +94,9 @@ class ConsoleView
 		LRESULT OnTimer(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 		LRESULT OnInputLangChangeRequest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnInputLangChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnIMEComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnIMEStartComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+		LRESULT OnIMEEndComposition(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 		LRESULT OnDropFiles(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 		LRESULT OnUpdateConsoleView(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/);
 
@@ -164,7 +170,8 @@ class ConsoleView
 		void ForwardMouseClick(UINT uMsg, WPARAM wParam, const CPoint& point);
 
 		COORD GetConsoleCoord(const CPoint& clientPoint);
-
+		
+		void updateCompositWindow();
 
 	private:
 
@@ -224,7 +231,9 @@ class ConsoleView
 		// we'll store error messages thrown during OnCreate
 		// handler here...
 		CString							m_exceptionMessage;
-
+		
+		// indicates if we are in IME composition
+		bool							m_imeComposition;
 // static members
 private:
 
